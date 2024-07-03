@@ -95,12 +95,7 @@ func uint32AUint8(valor uint32) uint8 {
 	return uint8(valor / 257)
 }
 
-func aplicarDitheringAImagen(ubicacion string) error {
-	imagenOriginal, err := obtenerImagenLocal(ubicacion)
-	if err != nil {
-		return err
-	}
-
+func floydSteinbergDithering(imagenOriginal image.Image) *image.RGBA {
 	ancho, alto := imagenOriginal.Bounds().Max.X, imagenOriginal.Bounds().Max.Y
 	imagenConDithering := image.NewRGBA(image.Rect(0, 0, ancho, alto))
 	for y := 0; y < alto; y++ {
@@ -136,17 +131,29 @@ func aplicarDitheringAImagen(ubicacion string) error {
 		}
 
 	}
+	return imagenConDithering
+}
 
-	outFile, err := os.Create("dithering.png")
+func guardarImagen(nombre string, imagen *image.RGBA) error {
+	archivoDeImagenResultante, err := os.Create(nombre)
 	if err != nil {
 		return err
 	}
-	defer outFile.Close()
-	png.Encode(outFile, imagenConDithering)
-	return nil
+	defer archivoDeImagenResultante.Close()
+	return png.Encode(archivoDeImagenResultante, imagen)
+}
+
+func demostrarDithering(origen string, destino string) error {
+	imagen, err := obtenerImagenLocal(origen)
+	if err != nil {
+		return err
+	}
+	imagenConvertida := floydSteinbergDithering(imagen)
+	return guardarImagen(destino, imagenConvertida)
 }
 
 func main() {
-	archivo := "lagartija.jpg"
-	log.Printf("%v", aplicarDitheringAImagen(archivo))
+	nombreImagenEntrada := "lagartija.jpg"
+	nombreImagenSalida := "convertida.png"
+	log.Printf("Error al convertir: %v", demostrarDithering(nombreImagenEntrada, nombreImagenSalida))
 }
